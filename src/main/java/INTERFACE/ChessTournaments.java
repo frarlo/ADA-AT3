@@ -20,7 +20,7 @@ public class ChessTournaments {
 	// Keyboard instance:
 	public static Scanner scKeyboard = new Scanner(System.in);
 	
-	// This method prints the main menu of the application using the ShowMenu() method in IOTools:
+	// This method prints the main menu of the application using the ShowMenu() method in IOTools:  // Recycled from the AT1/2
 	public static int PrintMenu() {
 		// Declaration of the option:
 		int iOption;
@@ -42,7 +42,7 @@ public class ChessTournaments {
 		return iOption;
 	}
 	
-	// Simple method to ask any input of the user in order to continue the program's execution: 	// Exactly the same as the AT1.
+	// Simple method to ask any input of the user in order to continue the program's execution: 	// Exactly the same as AT1/2
 	public static void PressAnyKeyToContinue() {
 		// Blank line:
 		System.out.println("");
@@ -52,7 +52,6 @@ public class ChessTournaments {
 			// Any key read:
 			System.in.read();
 		}catch (Exception exe) {
-			
 		}
 	}
 	
@@ -147,7 +146,6 @@ public class ChessTournaments {
 				// INSERT operation using the method in the DAO class:
 				objPlayerDAO.addPlayer(objPlayer.getPlayerID(), objPlayer.getFullName(), objPlayer.getCountry(), objPlayer.getELO());
 			}
-			
 		}
 	}
 	
@@ -175,8 +173,7 @@ public class ChessTournaments {
 		Location objLocation;	// <- City
 		Date dtStartDate;
 		Date dtEndDate;
-		HashSet<Player> hsetPlayers = new HashSet<Player>();
-		
+				
 		// To control the inserted players:
 		ArrayList<Integer> arlPlayersID = new ArrayList<Integer>();
 		int iPlayerID;
@@ -186,6 +183,8 @@ public class ChessTournaments {
 		while (true) {
 			// Cleaning the keyboard buffer:
 			IOTools.Reset();
+			// Initialization of the set of Players to add (if required by the user):
+			HashSet<Player> hsetPlayers = new HashSet<Player>();
 			// Declaration of the boolean bExists to false to check the entered Code later:
 			boolean bExists = false;
 			// Asking for the Tournament's Code:
@@ -204,7 +203,6 @@ public class ChessTournaments {
 					// And stops the execution:
 					break;
 				}
-			
 			}
 			// Checking the value of the boolean value of exists:
 			if(bExists) {
@@ -261,16 +259,13 @@ public class ChessTournaments {
 				// Creating the instance of the Tournament inserted by the user:
 				Tournament objTournament = new Tournament(stCode, stCategory, objLocation, dtStartDate, dtEndDate);
 	
-				System.out.println("Tournament created. Inserting players now...");
-				// Resetting the keyboard one more time...
-				IOTools.Reset();
-				
+				System.out.println("Tournament information saved. Adding players now, please wait...");
 				// Now we have a complete Tournament initializated. It's turn now to insert the players in that tournament:
 				
 				// While true loop to ask for players until a "zero" is inserted as the Player's ID:
 				while (true) {
-					// Cleaning the keyboard buffer:
-					IOTools.Reset();
+					// Resetting the array list of players ID:
+					arlPlayersID.clear();
 					// Asking for the player's ID:
 					iPlayerID = IOTools.AskInt("Player's ID (zero to exit)");
 					// Checking if the user has inserted zero:
@@ -306,8 +301,6 @@ public class ChessTournaments {
 				objTournament.setPlayers(hsetPlayers);
 				// Adding the Tournament to the arraylist:
 				arlTournaments.add(objTournament);
-				// Resetting the array list of players ID:
-				arlPlayersID.clear();
 				}
 			}		
 		return arlTournaments;
@@ -320,7 +313,6 @@ public class ChessTournaments {
 		if (arlTournaments.isEmpty()) {
 			// If it's empty it will not create it:
 			System.err.println("Empty array of Tournaments -- INSERT operation not possible!");
-			
 		}else{
 			// If the list is not empty it will populate the Tournament table:
 			
@@ -684,7 +676,6 @@ public class ChessTournaments {
 		ArrayList<Tournament> arlTournaments;
 		ArrayList<Location> arlLocations;
 		
-		
 		// Boolean initialized to "false" in order to show the menu until the user enters a 0:
 		boolean bQuit = false;
 		// Integer declaration for the menu's option:
@@ -694,7 +685,6 @@ public class ChessTournaments {
 		while (!bQuit) {
 			// The option will be selected by using the method in this class PrintMenu:
 			iOption = PrintMenu();
-			
 			// Switch:
 			switch (iOption) {
 			// 1: Adding players and scores:
