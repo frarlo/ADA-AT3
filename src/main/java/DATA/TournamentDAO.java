@@ -339,5 +339,98 @@ public class TournamentDAO {
 		return true;
 	}
 
+	// Side method - Method to change the City of a Tournament:
+	public void changeCity(String stCode, Location objLocation) {
+			// Session initialization:
+		Session hibSession = HibernateUtil.SFACTORY.openSession();
+		
+		// Transaction initialization to null:
+		Transaction txDB = null;
+
+		try{
+			// Starting the transaction:
+			txDB = hibSession.beginTransaction(); 
+			
+			// Getting the Tournament object with the stCode provided:
+			Tournament objTournament = (Tournament) hibSession.get(Tournament.class, stCode);
+			
+			// Adding the set of players to the Tournament object:
+			objTournament.setLocation(objLocation);
+			
+			// Merging the object in the DB:
+			hibSession.merge(objTournament);
+		
+			// Ending the transaction:
+			txDB.commit();
+			
+			// Output message:
+			System.out.println("=====> Tournament with the code " + stCode +" now has the City: " + objLocation.getCity());
+
+		}catch(HibernateException hibe) {
+			// If the Transaction is not null and something happens...
+			if(txDB != null) {
+				// Rollback now:
+				txDB.rollback();
+			}
+			hibe.printStackTrace();
+		}finally {
+			// Closing the Hibernate session:
+			hibSession.close();	
+		}			
+	}
+	
+	// Side method - Method to CHECK if the Code exists:
+	public boolean checkCode(String stCode) {
+		
+		// Session initialization:
+		Session hibSession = HibernateUtil.SFACTORY.openSession();
+		
+		// Transaction initialization to null:
+		Transaction txDB = null;
+
+		try{
+			// Starting the transaction:
+			txDB = hibSession.beginTransaction();
+			
+			// 1. Creating the CriteriaBuilder:
+			CriteriaBuilder crbCritBuilder = hibSession.getCriteriaBuilder();
+			
+			// 2. Creating the query object:
+			CriteriaQuery<Tournament> crqHQL = crbCritBuilder.createQuery(Tournament.class);
+			
+			// 3. Setting the query root:
+			Root<Tournament> rootTournament = crqHQL.from(Tournament.class);
+			
+			// 4. Specifying the result we want to show in the query:
+	        crqHQL.select(rootTournament).where(crbCritBuilder.equal(rootTournament.get("stCode"), stCode));
+	        
+	        // 5. Preparing the query for execution:
+	        Query<Tournament> qryHQL = hibSession.createQuery(crqHQL);
+	        
+	        // List of the query result:
+	        List<Tournament> lstTournament = qryHQL.getResultList();
+	        
+	        // Checking if it is empty:
+	     	if(lstTournament.isEmpty()) {
+	     			// If it is empty the location does not exists:
+	     			return false;
+	     	}	
+	     	// Ending the transaction:
+	    	txDB.commit();
+			// Otherwise it exists:
+	    	return true;
+		}catch(HibernateException hibe) {
+			// If the Transaction is not null and something happens...
+			if(txDB != null) {
+				// Rollback now:
+				txDB.rollback();
+			}
+			hibe.printStackTrace();
+			return false;
+		}finally {
+			// Closing the Hibernate session:
+			hibSession.close();	
+		}		
+	}
 	
 }

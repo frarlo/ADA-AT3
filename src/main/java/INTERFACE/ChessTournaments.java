@@ -1,7 +1,5 @@
 package INTERFACE;
 
-import java.util.Scanner;
-import java.util.Set;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.ArrayList;
@@ -17,9 +15,6 @@ public class ChessTournaments {
 	 * INTERFACE layer. Program in order to manage the user's input and the program's output. 
 	 */
 
-	// Keyboard instance:
-	public static Scanner scKeyboard = new Scanner(System.in);
-	
 	// This method prints the main menu of the application using the ShowMenu() method in IOTools:  // Recycled from the AT1/2
 	public static int PrintMenu() {
 		// Declaration of the option:
@@ -126,6 +121,7 @@ public class ChessTournaments {
 	// Option 1 - Second step - Getting the Players in the ArrayList inserted into the DB:
 	public static void SavePlayersToDB(ArrayList<Player> arlPlayers) {
 		
+		
 		// Check if the ArrayList is empty:
 		if (arlPlayers.isEmpty()) {
 			// If it's empty the method will not do anything besides printing this message:
@@ -135,7 +131,6 @@ public class ChessTournaments {
 			
 			// Declaration of the object Player DAO:
 			PlayerDAO objPlayerDAO = new PlayerDAO();
-			
 			// Iterator with the array list:
 			Iterator<Player> itPlayers = arlPlayers.iterator();
 			
@@ -143,8 +138,14 @@ public class ChessTournaments {
 			while(itPlayers.hasNext()) {
 				// Actual player:
 				Player objPlayer = itPlayers.next();
-				// INSERT operation using the method in the DAO class:
-				objPlayerDAO.addPlayer(objPlayer.getPlayerID(), objPlayer.getFullName(), objPlayer.getCountry(), objPlayer.getELO());
+				// Checking if the player exists:
+				if(!objPlayerDAO.checkPlayer(objPlayer.getPlayerID())) {
+					// It does not. INSERT operation using the method in the DAO class:
+					objPlayerDAO.addPlayer(objPlayer.getPlayerID(), objPlayer.getFullName(), objPlayer.getCountry(), objPlayer.getELO());
+				}else {
+					// It exists. Avoiding an error and printing the information:
+					System.err.println("Cannot insert the Player with the ID '" + objPlayer.getPlayerID() + "'. It already exists!");
+				}
 			}
 		}
 	}
@@ -323,16 +324,21 @@ public class ChessTournaments {
 			
 			// Looping the ArrayList:
 			while(itTournaments.hasNext()) {
-				// Actual player:
+				// Actual Tournament:
 				Tournament objTournament = itTournaments.next();
-				// INSERT operation using the method in the DAO class:
-				objTournamentDAO.addTournament(objTournament.getCode(), objTournament.getCategory(), objTournament.getLocation(),
-						objTournament.getStartDate(), objTournament.getEndDate());
-				
-				// UPDATE operation using the method in the DAO class (adding a set of players to a Tournament):
-				objTournamentDAO.addPlayers(objTournament.getCode(), objTournament.getPlayers());
+				// Checking if the Tournament exists:
+				if(!objTournamentDAO.checkCode(objTournament.getCode())) {
+					// It does not. INSERT operation using the method in the DAO class:
+					objTournamentDAO.addTournament(objTournament.getCode(), objTournament.getCategory(), objTournament.getLocation(),
+							objTournament.getStartDate(), objTournament.getEndDate());
+					
+					// UPDATE operation using the method in the DAO class (adding a set of players to a Tournament):
+					objTournamentDAO.addPlayers(objTournament.getCode(), objTournament.getPlayers());
+				}else {
+					// It exists. Printing a control message to inform the user:
+					System.err.println("Cannot insert the Tournament with the code '"+objTournament.getCode()+"'. It already exists!");
+				}
 			}
-			
 		}		
 	}
 	
@@ -358,6 +364,8 @@ public class ChessTournaments {
 		String stCountry;
 		int iPopulation;
 		
+		Location objLocation = new Location();
+		
 		// While true loop to ask for players until a "zero" is inserted as the Location's city:
 		while (true) {
 			// Cleaning the keyboard buffer:
@@ -372,8 +380,8 @@ public class ChessTournaments {
 				break;
 			}
 			// Enhanced for loop to check the objects of the ArrayList:
-			for (Location objLocation : arlLocations)
-				if(objLocation.getCity() == stCity) {
+			for (Location objLocationCheck : arlLocations)
+				if(objLocationCheck.getCity() == stCity) {
 					// Changes the boolean bExists to true:
 					bExists = true;
 					// And stops the execution:
@@ -401,12 +409,12 @@ public class ChessTournaments {
 			}
 			
 			// Creation of the new Location:
-			Location objLocation = new Location(stCity, stCountry, iPopulation);
+			objLocation = new Location(stCity, stCountry, iPopulation);
 
 			// Adding the Location to our ArrayList:
 			arlLocations.add(objLocation);
 			}
-		}		
+		}			
 		// Returning the ArrayList of Locations:
 		return arlLocations;
 	}
@@ -419,21 +427,50 @@ public class ChessTournaments {
 			// If it's empty it will not create it:
 			System.err.println("Empty array of Locations -- INSERT operation not possible!");
 			
-		}else{
-			// If the list is not empty it will populate the SQLite database
-			
+		}else{		
 			// Declaration of the object DAO:
 			LocationDAO objLocationDAO = new LocationDAO();
-			
 			// Iterator:
 			Iterator<Location> itLocations = arlLocations.iterator();
-			
+			// Initialization of the stCode String to ask for Tournaments...
+			String stCode;
 			// While the list has a next item:
 			while(itLocations.hasNext()) {
 				// Extraction of the object of the list:
 				Location objLocation = itLocations.next();
-				// And using the INSERT method in the DAO object:
-				objLocationDAO.addLocation(objLocation.getCity(), objLocation.getCountry(), objLocation.getPopulation());
+				// Checking if the Location does not exist:
+				if(!objLocationDAO.checkLocation(objLocation.getCity())) {
+					// It does not. Using the INSERT method in the DAO object:
+					objLocationDAO.addLocation(objLocation.getCity(), objLocation.getCountry(), objLocation.getPopulation());
+					
+					// Now that the Location already exists we can ask the user if the wants to update Tournaments with the current Location:
+					// Control message, showing the actual City in our ArrayList, to be sure what city are we referring to:
+					System.out.println("Inserting tournaments in " + objLocation.getCity() + "...");
+					
+					// While true loop to ask for Tournament codes until the user introduces zero:
+					while (true) {
+						// Asking for the Tournament's code:
+						stCode = IOTools.AskString("Tournament's code (zero to exit)");
+						// Checking if the user has inserted zero:
+						if (stCode.equals("0")) {
+							// Stopping the while loop:
+							break;
+						}
+						// Initialization of the DAO object:
+						TournamentDAO objTournamentDAO = new TournamentDAO();
+						// If the Tournament code exists...
+						if(objTournamentDAO.checkCode(stCode)) {
+							// We change the Location of the Tournament
+							objTournamentDAO.changeCity(stCode, objLocation);
+						}else {
+							// If does not exist we print an informative error:
+							System.err.println("Tournament code doesn't exist!");
+						}
+					}						
+				}else {
+					// The check has failed, the City already exists. Informing the user:
+					System.err.println("Cannot insert the Location with the city '"+objLocation.getCity()+"'. It already exists!");
+				}
 			}
 		}		
 	}
@@ -570,16 +607,15 @@ public class ChessTournaments {
 		ArrayList<String> arlLocationsToDelete = new ArrayList<String>();
 		
 		// String of the city to delete:
-		String stCity;
+		String stCity = "";
 		
 		// While true loop to ask for players until a "zero" is inserted as the Player's ID:
 		while (true) {
-			// Cleaning the keyboard buffer:
 			IOTools.Reset();
 			// Declaration of the boolean bExists to false to check the entered ID later:
 			boolean bExists = false;
 			// Asking for the player's ID:
-			stCity = IOTools.AskString("Location's city to delete (zero to exit)");
+			stCity = IOTools.AskStringWithSpaces("Location's city to delete (zero to exit)");
 			// Checking if the user has inserted zero:
 			if (stCity.equals("0"))
 				// Stopping the while loop:
@@ -601,8 +637,8 @@ public class ChessTournaments {
 			}
 			// Adding the city to our list:
 			arlLocationsToDelete.add(stCity);
-			}
-			// Now we delete all the Locations with the City on the list:
+		}
+		// Now we delete all the Locations with the City on the list:
 		
 			// Iterator of the list:
 			Iterator<String> itLocations = arlLocationsToDelete.iterator();

@@ -140,6 +140,8 @@ public class LocationDAO {
 			if(objLocation != null) {
 				// It is not, removing it:
 				hibSession.remove(objLocation);
+				// Message:
+				System.out.println("Location with the city '" + stCity +"' removed.");
 			}		
 			// Ending the transaction:
 			txDB.commit();
